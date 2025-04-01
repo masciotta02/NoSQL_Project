@@ -1,3 +1,3 @@
-# DW_Project
-Select a set of data sources, integrate them by means of ETL operations, define the DFM model for your data, define and populate the corresponding star schema or snowflake schema, by using a relational DB.
-Focus: ability to combine data from different datasets in order to produce a relevant unified source of analysis.
+# NoSQL_Project
+Select a dataset, a NoSQL tool (graph database, document-based, etc.) and a relational DBMS, and compare the results of analyses on different systems, highlighting advantages and disadvantages of each approach in terms of efficiency.
+Focus: ability to compare different technologies
