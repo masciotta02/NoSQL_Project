@@ -7,11 +7,6 @@
 
 LOAD CSV WITH HEADERS FROM 'file:///synthetic_fraud_dataset.csv' AS row
 MERGE (u:User {user_id: row.`User_ID`})
-SET u.account_balance = toFloat(row.`Account_Balance`),
-    u.previous_fraudulent_activity = toInteger(row.`Previous_Fraudulent_Activity`),
-    u.daily_transaction_count = toInteger(row.`Daily_Transaction_Count`),
-    u.avg_transaction_amount_7d = toFloat(row.`Avg_Transaction_Amount_7d`),
-    u.failed_transaction_count_7d = toInteger(row.`Failed_Transaction_Count_7d`) 
 
 
 
@@ -31,6 +26,11 @@ SET t.amount = toFloat(row.`Transaction_Amount`),
     t.risk_score = toFloat(row.`Risk_Score`),
     t.is_weekend = toBoolean(row.`Is_Weekend`),
     t.fraud_label = toInteger(row.`Fraud_Label`)
+    t.account_balance = toFloat(row.`Account_Balance`),
+    t.previous_fraudulent_activity = toInteger(row.`Previous_Fraudulent_Activity`),
+    t.daily_transaction_count = toInteger(row.`Daily_Transaction_Count`),
+    t.avg_transaction_amount_7d = toFloat(row.`Avg_Transaction_Amount_7d`),
+    t.failed_transaction_count_7d = toInteger(row.`Failed_Transaction_Count_7d`) 
 
 
 // NODO PER I MERCHANT
