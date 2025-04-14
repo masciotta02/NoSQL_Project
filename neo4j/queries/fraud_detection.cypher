@@ -371,3 +371,49 @@ STATISTICS:
 
 - 255 ms --->  Execution Time
 
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+8. This query identifies the top 10 users with the highest number of transactions. It groups transactions by UserID, counts the total transactions for each user 
+   and returns the results sorted in descending order of transaction count:
+
+    PROFILE
+    MATCH (u:User)-[:PERFORMED]->(t:Transaction)
+    WITH u.user_id AS UserID, COUNT(t) AS TotalTransactions
+    RETURN UserID, TotalTransactions
+    ORDER BY TotalTransactions DESC
+    LIMIT 10;
+
+OUTPUT:
+
+╒═══════════╤═════════════════╕
+│UserID     │TotalTransactions│
+╞═══════════╪═════════════════╡
+│"USER_6599"│256              │
+├───────────┼─────────────────┤
+│"USER_3925"│256              │
+├───────────┼─────────────────┤
+│"USER_9998"│256              │
+├───────────┼─────────────────┤
+│"USER_3415"│225              │
+├───────────┼─────────────────┤
+│"USER_1027"│225              │
+├───────────┼─────────────────┤
+│"USER_5014"│225              │
+├───────────┼─────────────────┤
+│"USER_6237"│196              │
+├───────────┼─────────────────┤
+│"USER_2620"│196              │
+├───────────┼─────────────────┤
+│"USER_6243"│196              │
+├───────────┼─────────────────┤
+│"USER_5780"│196              │
+└───────────┴─────────────────┘
+
+
+STATISTICS:
+
+- 1738281 total DB Hits
+
+- 485 ms --->  Execution Time
+
