@@ -145,7 +145,7 @@ FROM
     transactions_N
 GROUP BY 
     UserID
-ORDER BY TotalTransactions
+ORDER BY TotalTransactions DESC
 LIMIT 10;
 
 --0.11
