@@ -372,7 +372,7 @@ STATISTICS:
 - 255 ms --->  Execution Time
 
 
------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------
 
 8. This query identifies the top 10 users with the highest number of transactions. It groups transactions by UserID, counts the total transactions for each user 
    and returns the results sorted in descending order of transaction count:
