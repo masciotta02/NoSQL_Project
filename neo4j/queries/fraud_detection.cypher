@@ -1,17 +1,19 @@
 
+/* 
 -------------- QUERIES FOR ANALYSIS AND EVALUATION ------------------------------------
 
 
 1. This query analyzes transactions connected to merchants via the IN_CATEGORY relationship and returns aggregated statistics for each merchant category. 
 It calculates the total number of transactions (total) and the number of fraudulent transactions (frauds) per category, 
-sorting the results in descending order of fraud occurrences:
+sorting the results in descending order of fraud occurrences:*/
 
     MATCH (t:Transaction)-[:IN_CATEGORY]->(m:Merchant)
     RETURN m.merchant_category, COUNT(t) AS total, 
         SUM(t.fraud_label) AS frauds
     ORDER BY frauds DESC;
 
-OUTPUT:
+/*
+OUTPUT: 
 ╒═══════════════════╤═════╤══════╕
 │m.merchant_category│total│frauds│
 ╞═══════════════════╪═════╪══════╡
@@ -30,7 +32,7 @@ STATISTICS:
 
 - 250117 total DB Hits, where DB Hits means total number of access to databases during the execution of the query
 
-- 106 ms --->  Execution Time
+- 140 ms --->  Execution Time
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -43,8 +45,9 @@ Unusual Device : A transaction is flagged if the device type used is not among t
 
 The results include transaction details (ID, user, device type, distance, timestamp) and the anomaly type ("Unusual Distance," "Unusual Device," or "Normal"), 
 sorted by timestamp in descending order, limited to the 100 most recent anomalies:
+*/
 
-    PROFILE
+
     MATCH (u:User)-[:PERFORMED]->(t:Transaction)
     WITH u.user_id AS UserID, AVG(t.transaction_distance) AS AvgDistance
 
@@ -73,6 +76,7 @@ sorted by timestamp in descending order, limited to the 100 most recent anomalie
     LIMIT 100;
 
 
+/* 
 Output(Partial for space reasons):
 
 │TransactionID│UserID     │DeviceType│Transaction_Distance│Timestamp            │AnomalyType       
@@ -90,9 +94,9 @@ Output(Partial for space reasons):
 
 Statistics:
 
-- 2.696.428.477 total DB Hits
+- 1.190.205 total DB Hits
 
-- 182.327 ms --->  Execution Time
+- 594 ms --->  Execution Time
 
 --------------------------------------------------------------------------------------------------------------------------
 
@@ -100,8 +104,9 @@ Statistics:
 ranking them within each location based on the total fraud amount. It calculates the number of fraudulent transactions, the total fraud amount, 
 and the user's overall fraudulent activity, returning the top 80 results with details such as user ID, location, device type, merchant category, fraud count, total fraud amount,
 location-based rank, and the user's total fraud transaction count:
+*/
 
-    PROFILE
+
     MATCH (u:User)-[:PERFORMED]->(t:Transaction)-[:EXECUTED_ON]->(d:Device),
         (t)-[:LOCATED_AT]->(l:Location),
         (t)-[:IN_CATEGORY]->(m:Merchant)
@@ -151,6 +156,7 @@ location-based rank, and the user's total fraud transaction count:
     ORDER BY TotalFraudAmount DESC
     LIMIT 80;
 
+/*
 OUTPUT:
 
 UserID     │LocationName│DeviceType│MerchantCategory│FraudulentTxCount│TotalFraudAmount  │LocationFraudRank│TotalUserFraudTx│
@@ -170,7 +176,7 @@ UserID     │LocationName│DeviceType│MerchantCategory│FraudulentTxCount�
 
 STATISTICS:
 
-- 1778164 total DB Hits
+- 1211164 total DB Hits
 
 - 406 ms --->  Execution Time
 
@@ -184,8 +190,8 @@ STATISTICS:
    OSSERVATION: We use the APOC library (apoc.date.parse) to convert timestamps (stored as strings in the format "yyyy-MM-dd HH:mm:ss") into milliseconds since epoch. 
                 This allows us to calculate the time difference between transactions in milliseconds, which is not natively supported in Cypher for custom date formats. 
                 Without APOC, Neo4j cannot directly parse and process custom timestamp formats.
+*/
 
-    PROFILE
     MATCH (u:User)-[:PERFORMED]->(t1:Transaction),
         (u)-[:PERFORMED]->(t2:Transaction)
     WHERE t1.fraud_label = 1 AND t2.fraud_label = 1
@@ -211,6 +217,7 @@ STATISTICS:
         Tx1_ID, UserID, Tx1_Amount, Tx1_Time, Tx2_ID, Tx2_Amount, Tx2_Time, TimeDiff_Seconds, SimilarAmountTxCount;
 
 
+/*
 OUTPUT:
 
 ╒═══════════╤═══════════╤══════════╤═════════════════════╤═══════════╤══════════╤═════════════════════╤════════════════╤════════════════════╕
@@ -223,9 +230,9 @@ OUTPUT:
 
 STATISTICS:
 
-- 3.682.838 total DB Hits
+- 910.254 total DB Hits
 
-- 2.257 ms --->  Execution Time
+- 1043 --->  Execution Time
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -235,12 +242,13 @@ STATISTICS:
    It returns the user_id of the user, transaction_id of the transaction, device_type of the device, and merchant_category of the merchant. 
    It was designed to compare the performance of a graph database (Neo4j) with a relational database, 
    which is typically more efficient at handling queries involving large-scale, unfiltered cross-joins of this nature:
+*/
 
-    PROFILE
     MATCH (u:User), (t:Transaction), (d:Device), (m:Merchant)
     RETURN u.user_id, t.transaction_id, d.device_type, m.merchant_category
     LIMIT 20000;
 
+/*
 OUTPUT:
 
 ╒═══════════╤════════════════╤═════════════╤═══════════════════╕
@@ -275,9 +283,9 @@ STATISTICS:
    The number of fraudulent transactions (FraudulentTransactions).
    The fraud ratio as a percentage (FraudRatio), which is the proportion of fraudulent transactions relative to the total.
    The results are grouped by Card_Category, ordered by FraudRatio in descending order, highlighting categories with the highest fraud risk:
+*/
 
 
-   PROFILE
    MATCH (t:Transaction)
    WITH 
         CASE
@@ -300,6 +308,7 @@ STATISTICS:
     ORDER BY 
         FraudRatio DESC;
 
+/*
 OUTPUT:
 
 ═════════════╤═════════════════╤══════════════════════╤═════════════════╕
@@ -322,9 +331,8 @@ STATISTICS:
 
 
 7. This query analyzes user transactions, grouping them by UserID. For each user, it calculates the total number of transactions and the count of fraudulent transactions. 
-   It then filters for users with more than 5 fraudulent transactions, returning the top 10 users sorted by fraud count (descending) and total transactions (ascending):
+   It then filters for users with more than 5 fraudulent transactions, returning the top 10 users sorted by fraud count (descending) and total transactions (ascending):*/
 
-   PROFILE
    MATCH (u:User)-[:PERFORMED]->(t:Transaction)
    WITH 
         u.user_id AS UserID,
@@ -339,6 +347,7 @@ STATISTICS:
         total_transactions ASC
    LIMIT 10;
 
+/*
 OUTPUT:
 
 ╒═══════════╤══════════════════╤═══════════╕
@@ -367,7 +376,7 @@ OUTPUT:
 
 STATISTICS:
 
-- 1838813 total DB Hits
+- 285927  total DB Hits
 
 - 255 ms --->  Execution Time
 
@@ -376,15 +385,17 @@ STATISTICS:
 
 8. This query identifies the top 10 users with the highest number of transactions. It groups transactions by UserID, counts the total transactions for each user 
    and returns the results sorted in descending order of transaction count:
+*/
 
-    PROFILE
+    
     MATCH (u:User)-[:PERFORMED]->(t:Transaction)
     WITH u.user_id AS UserID, COUNT(t) AS TotalTransactions
     RETURN UserID, TotalTransactions
     ORDER BY TotalTransactions DESC
     LIMIT 10;
 
-OUTPUT:
+ /* 
+ OUTPUT:
 
 ╒═══════════╤═════════════════╕
 │UserID     │TotalTransactions│
@@ -411,9 +422,17 @@ OUTPUT:
 └───────────┴─────────────────┘
 
 
-STATISTICS:
+//STATISTICS:
 
-- 1738281 total DB Hits
+// - 185927 total DB Hits
 
-- 485 ms --->  Execution Time
+// - 485 ms --->  Execution Time
+*/
 
+
+
+
+//Put this beacuse .cypher file can't end with a comment, 
+//I want to recommend that It's useless for the code above.
+
+MATCH(p:prova) return p; 
