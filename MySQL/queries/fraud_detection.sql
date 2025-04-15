@@ -1,6 +1,6 @@
 --Cons for Relation DBMS (mange multi-join and self-join)
 
---1 This query is designed to detect users with suspicious behavior by analyzing their transaction patterns 
+--QUERY 1 This query is designed to detect users with suspicious behavior by analyzing their transaction patterns 
 SELECT 
     UserID, 
     COUNT(*) AS total_transactions,
@@ -31,7 +31,7 @@ LIMIT 10;
 | USER_9983 |                 10 |           7 |
 +-----------+--------------------+-------------+
 
--- 2 This query is designed to identify which merchant categories are most prone to fraud by analyzing the number 
+--QUERY 2 This query is designed to identify which merchant categories are most prone to fraud by analyzing the number 
 --of fraudulent transactions (Fraud_Label = 1) for each category. 
 SELECT 
     MerchantCategory, 
@@ -58,7 +58,7 @@ ORDER BY
 +------------------+-------+--------+
 
 
---3 This query identifies transactions that are flagged as either:
+--QUERY 3 This query identifies transactions that are flagged as either:
 --"Unusual Distance" : A transaction where the distance exceeds 1.5 times the user's average transaction distance.
 WITH UserStats AS (
     -- Calculate average transaction distance for each user
@@ -110,7 +110,7 @@ LIMIT 100; -- Limit to 100 most recent anomalies
 | TXN_38269     | USER_4510 | Laptop     |              4262.40 | 2023-12-31 23:50:00 | Unusual Distance |
 | TXN_25394     | USER_8356 | Laptop     |              4779.84 | 2023-12-31 21:52:00 | Unusual Distance |
 
---4  Identifies whether newer or older cards are more prone to fraud.
+--QUERY 4  Identifies whether newer or older cards are more prone to fraud.
 SELECT 
     CASE 
         WHEN Card_Age BETWEEN 1 AND 24 THEN 'New'       -- Cards aged 1-24 months
@@ -137,7 +137,7 @@ ORDER BY
 | Old           |             39971 |                  12818 |    32.0682 |
 +---------------+-------------------+------------------------+------------+
 
---5 The top 10 users based on # of transactions
+--QUERY 5 The top 10 users based on # of transactions
 SELECT 
     UserID, 
     COUNT(TransactionID) AS TotalTransactions
@@ -165,7 +165,7 @@ LIMIT 10;
 | USER_4343 |                14 |
 +-----------+-------------------+
 
--- Access different tables (better in MySQL than Neo4J)
+--QUERY 6 Access different tables (better in MySQL than Neo4J)
 SELECT 
     u.UserID,
     t.TransactionID,
@@ -189,7 +189,7 @@ LIMIT 20000;
 | USER_1860 | TXN_1         |        2 |          2 |
 ...
 
--- SELFJOIN (high time complexity in MySQL)
+--QUERY 7 SELFJOIN (high time complexity in MySQL)
 SELECT 
     t1.TransactionID AS Tx1_ID, 
     t1.UserID, 
@@ -231,7 +231,7 @@ LIMIT 1000;
 | TXN_28223 | USER_6378 |      13.41 | 2023-03-11 08:54:00 | TXN_11541 |     102.24 | 2023-03-12 00:49:00 |            57300 |         2 |                    5 |
 ...
 
---MULTIJOIN (problem in MySQL)
+--QUERY 8 MULTIJOIN (problem in MySQL)
 SELECT 
     u.UserID, 
     l.LocationName, 
