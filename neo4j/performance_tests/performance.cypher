@@ -91,7 +91,7 @@ in particular each node represents a specific phase of the query's execution wit
 
 
 
- ------------------- Potential Optimizations with Indexes ------------------------------
+ ------------------- Potential Optimizations with Indexes ----------------------------
 
 
 To improve the performance of this query, we can consider the following optimizations using indexes:
