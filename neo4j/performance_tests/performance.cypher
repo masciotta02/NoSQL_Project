@@ -1,5 +1,6 @@
 
-## -------------------------- ANALYSIS WITH PROFILE ----------------------------------------
+
+// -------------------------- ANALYSIS WITH PROFILE ----------------------------------------
 
 PROFILE
 MATCH (u:User)-[:PERFORMED]->(t:Transaction)
@@ -8,6 +9,7 @@ RETURN UserID, TotalTransactions
 ORDER BY TotalTransactions DESC
 LIMIT 10;
 
+/* 
 We can use PROFILE that allows us to execute a query while providing detailed performance metrics, such as the number of rows processed (Rows), database accesses (DbHits) and memory usage at each step of the execution plan. This helps identify bottlenecks and optimize the query by highlighting expensive operations.
 
 
@@ -89,33 +91,34 @@ in particular each node represents a specific phase of the query's execution wit
 
 
 
-## ------------------- Potential Optimizations with Indexes ------------------------------
+ ------------------- Potential Optimizations with Indexes ---------------------------
 
 
 To improve the performance of this query, we can consider the following optimizations using indexes:
 
 # 1. Index on Transaction Label:
 
-If there are many nodes in the database, scanning all Transaction nodes can be expensive. An index on the Transaction label can speed up the initial scan:
+If there are many nodes in the database, scanning all Transaction nodes can be expensive. An index on the Transaction label can speed up the initial scan: 
+*/
 
-'''' CREATE INDEX ON :Transaction(); ''''
-
-
-# 2. Index on User(user_id):
-
-The query aggregates data based on user_id. Adding an index on user_id ensures that Neo4j can quickly locate and group users by their IDs:
-
-'''' CREATE INDEX ON :User(user_id); ''''
+ CREATE INDEX FOR (t:Transaction) ON (t.transaction_id); 
 
 
-# 3. Constraint on User(user_id):
+// 2. Index on User(user_id):
 
-If user_id is unique for each user, defining a uniqueness constraint can help Neo4j manage queries based on user_id more efficiently:
+// The query aggregates data based on user_id. Adding an index on user_id ensures that Neo4j can quickly locate and group users by their IDs:
 
-'''' CREATE CONSTRAINT ON (u:User) ASSERT u.user_id IS UNIQUE; ''''
+ CREATE INDEX FOR (u:User) ON (u.user_id); 
 
 
-## -------------------------- Query Analysis with Indexes --------------------------
+// 3. Constraint on User(user_id):
+
+//If user_id is unique for each user, defining a uniqueness constraint can help Neo4j manage queries based on user_id more efficiently:
+
+ CREATE CONSTRAINT user_id_unique FOR (u:User) REQUIRE u.user_id IS UNIQUE;
+
+
+// -------------------------- Query Analysis with Indexes --------------------------
 
 
 PROFILE
@@ -126,7 +129,8 @@ ORDER BY TotalTransactions DESC
 LIMIT 10;
 
 
-# 1. NodeIndexScan:
+/*
+1. NodeIndexScan:
 
       -----------------------------------
       |  METRICS:                       |
@@ -185,6 +189,17 @@ LIMIT 10;
 
 # Conclusion
 
-The analysis of the base query and the optimized query highlights the significant impact of using indexes in Neo4j. By forcing the use of indexes on User(user_id) and Transaction(transaction_id), the optimized query reduces memory usage and database hits, leading to improved performance. For instance, operations like OrderedAggregation and Top show a marked decrease in memory consumption (like 94.712 bytes for aggregation and 183,384 bytes for sorting), with zero database hits (DbHits). This indicates that all necessary data was efficiently retrieved during earlier stages, minimizing redundant access. The final ProduceResults phase also reflects this efficiency, with total memory usage capped at 278,552 bytes (base query: 1,908,768 bytes). 
+The analysis of the base query and the optimized query highlights the significant impact of using indexes in Neo4j. 
+By forcing the use of indexes on User(user_id) and Transaction(transaction_id), the optimized query reduces memory usage and database hits, 
+leading to improved performance. For instance, operations like OrderedAggregation and Top show a marked decrease in memory consumption (like 94.712 bytes for aggregation and 183,384 bytes for sorting),
+with zero database hits (DbHits). This indicates that all necessary data was efficiently retrieved during earlier stages, minimizing redundant access. 
+The final ProduceResults phase also reflects this efficiency, with total memory usage capped at 278,552 bytes (base query: 1,908,768 bytes). */
 
+
+
+
+//Put this beacuse .cypher file can't end with a comment, 
+//I want to recommend that It's useless for the code above.
+
+MATCH(p:prova) return p; 
 
