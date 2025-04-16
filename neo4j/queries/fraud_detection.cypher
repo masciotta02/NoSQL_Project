@@ -359,7 +359,7 @@ STATISTICS:
 
 */
 
-//----------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
 
 /*
 Query 8. This query identifies the top combinations of users, locations, device types, and merchant categories involved in high-value fraudulent transactions (amount > 50), 
