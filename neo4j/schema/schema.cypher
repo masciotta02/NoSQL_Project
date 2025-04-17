@@ -1,19 +1,18 @@
-
-// CREAZIONE DEI NODI
-
-
-// NODO USER
+// LOADING OF CSV FILE
+LOAD CSV WITH HEADERS FROM 'file:///fraud_dataset.csv' AS row
 
 
-LOAD CSV WITH HEADERS FROM 'file:///synthetic_fraud_dataset.csv' AS row
+// ------------------------------- CREATION OF THE NODES --------------------------------------------------------
+
+
+// Creation of User Node
+
 MERGE (u:User {user_id: row.`User_ID`})
 
+WITH row
 
+// Creation of the Transaction Node
 
-// NODO PER LE TRANSACTION
-
-
-LOAD CSV WITH HEADERS FROM 'file:///synthetic_fraud_dataset.csv' AS row
 MERGE (t:Transaction {transaction_id: row.`Transaction_ID`})
 SET t.amount = toFloat(row.`Transaction_Amount`),
     t.type = row.`Transaction_Type`,
@@ -25,71 +24,59 @@ SET t.amount = toFloat(row.`Transaction_Amount`),
     t.authentication_method = row.`Authentication_Method`,
     t.risk_score = toFloat(row.`Risk_Score`),
     t.is_weekend = toBoolean(row.`Is_Weekend`),
-    t.fraud_label = toInteger(row.`Fraud_Label`)
+    t.fraud_label = toInteger(row.`Fraud_Label`),
     t.account_balance = toFloat(row.`Account_Balance`),
     t.previous_fraudulent_activity = toInteger(row.`Previous_Fraudulent_Activity`),
     t.daily_transaction_count = toInteger(row.`Daily_Transaction_Count`),
     t.avg_transaction_amount_7d = toFloat(row.`Avg_Transaction_Amount_7d`),
-    t.failed_transaction_count_7d = toInteger(row.`Failed_Transaction_Count_7d`) 
+    t.failed_transaction_count_7d = toInteger(row.`Failed_Transaction_Count_7d`)
 
+WITH row
 
-// NODO PER I MERCHANT
+// Creation of the Merchant Node
 
-LOAD CSV WITH HEADERS FROM 'file:///synthetic_fraud_dataset.csv' AS row
 MERGE (m:Merchant {merchant_category: row.`Merchant_Category`})
 
+WITH row
 
+// creation of the Device Node
 
-// NODO PER I DEVICE
-
-
-LOAD CSV WITH HEADERS FROM 'file:///synthetic_fraud_dataset.csv' AS row
 MERGE (d:Device {device_type: row.`Device_Type`})
 
+WITH row
 
-// NODO PER LA LOCATION
+// Creation of the Location Node
 
-LOAD CSV WITH HEADERS FROM 'file:///synthetic_fraud_dataset.csv' AS row
 MERGE (l:Location {location: row.`Location`})
 
+WITH row
 
 
-// ----------- CREAZIONE DELLE RELAZIONI ------------------
+//---------------------- CREATION OF THE RELATIONSHIPS ----------------------------------------------
 
 
-
-// RELAZIONE: USER----> PERFORMED ------> TRANSACTION
-
-
-LOAD CSV WITH HEADERS FROM 'file:///synthetic_fraud_dataset.csv' AS row
-MATCH (u:User {user_id: row.`User ID`})
-MATCH (t:Transaction {transaction_id: row.`Transaction ID`})
+// RELATION: USER ----> PERFORMED ------> TRANSACTION
+MATCH (u:User {user_id: row.`User_ID`})
+MATCH (t:Transaction {transaction_id: row.`Transaction_ID`})
 MERGE (u)-[:PERFORMED]->(t)
 
+WITH row
 
-// RELAZIONE: TRANSACTION -----> IN_CATEGORY -----> MERCHANT
-
-
-LOAD CSV WITH HEADERS FROM 'file:///synthetic_fraud_dataset.csv' AS row
+// RELATION: TRANSACTION -----> IN_CATEGORY -----> MERCHANT
 MATCH (t:Transaction {transaction_id: row.`Transaction_ID`})
-MATCH(m:Merchant {merchant_category: row.`Merchant_Category`})
+MATCH (m:Merchant {merchant_category: row.`Merchant_Category`})
 MERGE (t)-[:IN_CATEGORY]->(m)
 
+WITH row
 
-// RELAZIONE: TRANSACTION -----> EXECUTED ON ------> DEVICE
-
-
-LOAD CSV WITH HEADERS FROM 'file:///synthetic_fraud_dataset.csv' AS row
-MATCH (t:Transaction {transaction_id: row.`Transaction ID`})
-MATCH (d:Device {device_type: row.`Device Type`})
+// RELATION: TRANSACTION -----> EXECUTED_ON ------> DEVICE
+MATCH (t:Transaction {transaction_id: row.`Transaction_ID`})
+MATCH (d:Device {device_type: row.`Device_Type`})
 MERGE (t)-[:EXECUTED_ON]->(d)
 
+WITH row
 
-
-// RELAZIONE: TRANSACTION -----> LOCATED_AT ------> LOCATION
-
-
-LOAD CSV WITH HEADERS FROM 'file:///synthetic_fraud_dataset.csv' AS row
-MATCH (t:Transaction {transaction_id: row.`Transaction ID`})
+// RELATION: TRANSACTION -----> LOCATED_AT ------> LOCATION
+MATCH (t:Transaction {transaction_id: row.`Transaction_ID`})
 MATCH (l:Location {location: row.`Location`})
 MERGE (t)-[:LOCATED_AT]->(l)
