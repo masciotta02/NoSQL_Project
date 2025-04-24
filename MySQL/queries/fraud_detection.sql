@@ -1,5 +1,3 @@
---Cons for Relation DBMS (mange multi-join and self-join)
-
 --QUERY 1 This query is designed to detect users with suspicious behavior by analyzing their transaction patterns 
 SELECT 
     UserID, 
@@ -73,42 +71,30 @@ WITH UserStats AS (
 SELECT 
     t.TransactionID,
     t.UserID,
-    d.DeviceType,
     t.Transaction_Distance,
     t.Timestamp,
     CASE 
         WHEN t.Transaction_Distance > (us.AvgDistance * 1.5) THEN 'Unusual Distance'
-        WHEN t.DeviceID NOT IN (
-            SELECT DISTINCT t2.DeviceID
-            FROM transactions_N t2
-            WHERE t2.UserID = t.UserID
-        ) THEN 'Unusual Device'
         ELSE 'Normal'
     END AS AnomalyType
 FROM 
     transactions_N t
 LEFT JOIN 
-    Devices d ON t.DeviceID = d.DeviceID -- Use LEFT JOIN to avoid missing data
-LEFT JOIN 
     UserStats us ON t.UserID = us.UserID -- Use LEFT JOIN to avoid missing stats
 WHERE 
     t.Transaction_Distance > (us.AvgDistance * 1.5) -- Unusual Distance
-    OR t.DeviceID NOT IN (
-        SELECT DISTINCT t2.DeviceID
-        FROM transactions_N t2
-        WHERE t2.UserID = t.UserID
-    ) -- Unusual Device
 ORDER BY 
     t.Timestamp DESC
 LIMIT 100; -- Limit to 100 most recent anomalies
 
---4.15/3.97
+--0.20/0.21
 --OUTPUT
-+---------------+-----------+------------+----------------------+---------------------+------------------+
-| TransactionID | UserID    | DeviceType | Transaction_Distance | Timestamp           | AnomalyType      |
-+---------------+-----------+------------+----------------------+---------------------+------------------+
-| TXN_38269     | USER_4510 | Laptop     |              4262.40 | 2023-12-31 23:50:00 | Unusual Distance |
-| TXN_25394     | USER_8356 | Laptop     |              4779.84 | 2023-12-31 21:52:00 | Unusual Distance |
++---------------+-----------+----------------------+---------------------+------------------+
+| TransactionID | UserID    | Transaction_Distance | Timestamp           | AnomalyType      |
++---------------+-----------+----------------------+---------------------+------------------+
+| TXN_38269     | USER_4510 |              4262.40 | 2023-12-31 23:50:00 | Unusual Distance |
+| TXN_25394     | USER_8356 |              4779.84 | 2023-12-31 21:52:00 | Unusual Distance |
+| TXN_38974     | USER_4134 |              4042.77 | 2023-12-31 21:38:00 | Unusual Distance |
 
 --QUERY 4  Identifies whether newer or older cards are more prone to fraud.
 SELECT 
@@ -277,3 +263,77 @@ LIMIT 500;
 +-----------+--------------+------------+------------------+-------------------+------------------+-------------------+------------------+
 | USER_1988 | New York     | Tablet     | Electronics      |                 1 |          1005.32 |                 1 |                2 |
 | USER_1302 | London       | Tablet     | Electronics      |                 1 |           971.61 |                 1 |                2 |
+
+
+--FRAUD DETECTION ANALYSIS: Suspicious users and high-risk transaction patterns
+WITH SuspiciousUsers AS (
+    -- Identify suspicious users (Query 1)
+    SELECT 
+        UserID, 
+        COUNT(*) AS total_transactions,
+        SUM(Fraud_Label) AS fraud_count
+    FROM 
+        transactions_N
+    GROUP BY 
+        UserID
+    HAVING 
+        fraud_count > 5
+),
+UserStats AS (
+    -- Calculate average transaction distance for each user
+    SELECT 
+        UserID,
+        AVG(Transaction_Distance) AS AvgDistance
+    FROM 
+        transactions_N
+    GROUP BY 
+        UserID
+),
+UnusualTransactions AS (
+    -- Identify truly unusual transactions based on distance and timing
+    SELECT 
+        t.TransactionID,
+        t.UserID,
+        t.Transaction_Distance,
+        t.Timestamp,
+        CASE 
+            WHEN t.Transaction_Distance > (us.AvgDistance * 2.0) THEN 'Highly Unusual Distance'
+            WHEN HOUR(t.Timestamp) BETWEEN 0 AND 5 THEN 'Unusual Timing' -- Late-night transactions
+            ELSE 'Normal'
+        END AS AnomalyType
+    FROM 
+        transactions_N t
+    LEFT JOIN 
+        UserStats us ON t.UserID = us.UserID
+    WHERE 
+        t.Transaction_Distance > (us.AvgDistance * 2.0) -- Focus on highly unusual distances
+        OR HOUR(t.Timestamp) BETWEEN 0 AND 5 -- Focus on late-night transactions
+)
+-- Combine suspicious users with their truly unusual transactions
+SELECT 
+    su.UserID,
+    su.total_transactions,
+    su.fraud_count,
+    ut.TransactionID,
+    ut.AnomalyType,
+    ut.Transaction_Distance,
+    ut.Timestamp
+FROM 
+    SuspiciousUsers su
+JOIN 
+    UnusualTransactions ut ON su.UserID = ut.UserID
+ORDER BY 
+    su.fraud_count DESC, ut.Timestamp DESC;
+
+--OUTPUT
++-----------+--------------------+-------------+---------------+-------------------------+----------------------+---------------------+
+| UserID    | total_transactions | fraud_count | TransactionID | AnomalyType             | Transaction_Distance | Timestamp           |
++-----------+--------------------+-------------+---------------+-------------------------+----------------------+---------------------+
+| USER_7026 |                 11 |           8 | TXN_3867      | Unusual Timing          |              1987.10 | 2023-09-01 05:22:00 |
+| USER_7026 |                 11 |           8 | TXN_31611     | Unusual Timing          |              2180.86 | 2023-08-10 01:35:00 |
+| USER_7026 |                 11 |           8 | TXN_11941     | Unusual Timing          |              3570.20 | 2023-05-15 00:16:00 |
+| USER_9983 |                 10 |           7 | TXN_34076     | Highly Unusual Distance |              4592.78 | 2023-12-20 07:15:00 |
+| USER_2268 |                 11 |           7 | TXN_14588     | Unusual Timing          |               596.32 | 2023-12-17 00:19:00 |
+| USER_4936 |                 11 |           7 | TXN_24737     | Unusual Timing          |              4719.07 | 2023-12-15 01:22:00 |
+...
+...
