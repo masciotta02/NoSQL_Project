@@ -94,66 +94,57 @@ STATISTICS:
 //----------------------------------------------------------------------------------------------------------------------------------------
 
 /*
-Query 3. This query analyzes transactions performed by users to identify anomalies based on two criteria:
+Query 3. This query analyzes transactions performed by users to identify anomalies based on:
 
 Unusual Distance : A transaction is flagged if its distance exceeds 1.5 times the user's average transaction distance.
-Unusual Device : A transaction is flagged if the device type used is not among the types previously used by the user.
 
-The results include transaction details (ID, user, device type, distance, timestamp) and the anomaly type ("Unusual Distance," "Unusual Device," or "Normal"), 
+The results include transaction details (ID, user, distance, timestamp) and the anomaly type ("Unusual Distance" or "Normal"), 
 sorted by timestamp in descending order, limited to the 100 most recent anomalies:
 */
 
 
     MATCH (u:User)-[:PERFORMED]->(t:Transaction)
-    WITH u.user_id AS UserID, AVG(t.transaction_distance) AS AvgDistance
+    WITH u, avg(t.transaction_distance) AS avgDistance
 
+    MATCH (u)-[:PERFORMED]->(t2:Transaction)
+    WHERE t2.transaction_distance > avgDistance * 1.5
 
-    MATCH (u:User {user_id: UserID})-[:PERFORMED]->(t:Transaction)-[:EXECUTED_ON]->(d:Device)
-    WITH 
-        UserID, 
-        COLLECT(DISTINCT d.device_type) AS UsedDevices, 
-        AvgDistance
-
-    MATCH (u:User {user_id: UserID})-[:PERFORMED]->(t:Transaction)
-    OPTIONAL MATCH (t)-[:EXECUTED_ON]->(d:Device)
-    RETURN 
-        t.transaction_id AS TransactionID,
-        u.user_id AS UserID,
-        d.device_type AS DeviceType,
-        t.transaction_distance AS Transaction_Distance,
-        t.timestamp AS Timestamp,
-        CASE
-            WHEN t.transaction_distance > (AvgDistance * 1.5) THEN 'Unusual Distance'
-            WHEN NOT d.device_type IN UsedDevices THEN 'Unusual Device'
-            ELSE 'Normal'
-        END AS AnomalyType
-    ORDER BY 
-        t.timestamp DESC
+    RETURN
+    t2.transaction_id      AS TransactionID,
+    u.user_id              AS UserID,
+    t2.transaction_distance AS Transaction_Distance,
+    t2.timestamp          AS Timestamp,
+    CASE 
+        WHEN t2.transaction_distance > avgDistance * 1.5 THEN 'Unusual Distance'
+        ELSE 'Normal'
+    END                    AS AnomalyType
+    ORDER BY t2.timestamp DESC
     LIMIT 100;
+
 
 
 /* 
 Output(Partial for space reasons):
 
-╒═════════════╤═══════════╤══════════╤════════════════════╤═════════════════════╤══════════════════╕
-│TransactionID│UserID     │DeviceType│Transaction_Distance│Timestamp            │AnomalyType       │
-╞═════════════╪═══════════╪══════════╪════════════════════╪═════════════════════╪══════════════════╡
-│"TXN_38269"  │"USER_4510"│"Laptop"  │4262.4              │"2023-12-31 23:50:00"│"Unusual Distance"│
-├─────────────┼───────────┼──────────┼────────────────────┼─────────────────────┼──────────────────┤
-│"TXN_20223"  │"USER_8316"│"Mobile"  │2870.23             │"2023-12-31 23:34:00"│"Normal"          │
-├─────────────┼───────────┼──────────┼────────────────────┼─────────────────────┼──────────────────┤
-│"TXN_8862"   │"USER_2055"│"Laptop"  │2515.67             │"2023-12-31 23:29:00"│"Normal"          │
-├─────────────┼───────────┼──────────┼────────────────────┼─────────────────────┼──────────────────┤
-│"TXN_6431"   │"USER_5987"│"Tablet"  │1232.04             │"2023-12-31 23:04:00"│"Normal"          │
-├─────────────┼───────────┼──────────┼────────────────────┼─────────────────────┼──────────────────┤
-│"TXN_9727"   │"USER_1762"│"Tablet"  │2548.26             │"2023-12-31 23:03:00"│"Normal"          │
-├─────────────┼───────────┼──────────┼────────────────────┼─────────────────────┼──────────────────┤
+╒═════════════╤═══════════╤════════════════════╤═════════════════════╤══════════════════╕
+│TransactionID│UserID     │Transaction_Distance│Timestamp            │AnomalyType       │
+╞═════════════╪═══════════╪════════════════════╪═════════════════════╪══════════════════╡
+│"TXN_38269"  │"USER_4510"│4262.4              │"2023-12-31 23:50:00"│"Unusual Distance"│
+├─────────────┼───────────┼────────────────────┼─────────────────────┼──────────────────┤
+│"TXN_25394"  │"USER_8356"│4779.84             │"2023-12-31 21:52:00"│"Unusual Distance"│
+├─────────────┼───────────┼────────────────────┼─────────────────────┼──────────────────┤
+│"TXN_38974"  │"USER_4134"│4042.77             │"2023-12-31 21:38:00"│"Unusual Distance"│
+├─────────────┼───────────┼────────────────────┼─────────────────────┼──────────────────┤
+│"TXN_49969"  │"USER_3042"│3795.58             │"2023-12-31 20:17:00"│"Unusual Distance"│
+├─────────────┼───────────┼────────────────────┼─────────────────────┼──────────────────┤
+│"TXN_23399"  │"USER_1782"│4243.32             │"2023-12-31 19:35:00"│"Unusual Distance"│
+├─────────────┼───────────┼────────────────────┼─────────────────────┼──────────────────┤
 
 Statistics:
 
-- 1190205 total DB Hits
+- 465738 total DB hits
 
-- 594 ms --->  Execution Time
+- 201 ms --->  Execution Time
 
 */
 
