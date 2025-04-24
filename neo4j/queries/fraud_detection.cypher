@@ -151,7 +151,7 @@ Output(Partial for space reasons):
 
 Statistics:
 
-- 1.190.205 total DB Hits
+- 1190205 total DB Hits
 
 - 594 ms --->  Execution Time
 
@@ -303,7 +303,7 @@ STATISTICS:
 
 - 300048 total DB Hits
 
-- 127 ms --->  Execution Time
+- 6287 ms --->  Execution Time
 
 */
 
@@ -357,7 +357,7 @@ OUTPUT:
 
 STATISTICS:
 
-- 910.254 total DB Hits
+- 910254 total DB Hits
 
 - 1043 --->  Execution Time
 
